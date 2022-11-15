@@ -25,7 +25,6 @@ def sample_states(
 def sample_emisson(
     states: np.ndarray, obs_scales: np.ndarray
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
-    scales = obs_scales[states]
     return rng.normal(loc=0, scale=(obs_scales[np.newaxis] * states).sum(-1))
 
 
@@ -54,7 +53,7 @@ def infer_states(
 ) -> np.ndarray:
     log_priors = [np.log(initial_state_dist + 1e-8)]
 
-    unn_log_filter = log_priors[0] * emit_log_probs(
+    unn_log_filter = log_priors[0] + emit_log_probs(
         obs=obs[0], obs_scales=obs_scales
     )
     filtr = np.exp(unn_log_filter)
@@ -102,13 +101,13 @@ def plot(states, observations, inferred):
 if __name__ == "__main__":
     n_time_steps = 250
     initial_state_dist = np.array([0.99, 0.01])
-    transition= np.array(
-        [
-            [0.975, 1e-8], 
-            [0.025, 1. - 1e-8]
-        ]
-    )
-    obs_scales = np.array([0.03, 1.0])
+    if False:
+        transition = np.array([[0.975, 1e-8], [0.025, 1.0 - 1e-8]])
+    else:
+        transition = np.array([[0.9, 0.1], [0.1, 0.9]])
+
+    #obs_scales = np.array([0.25, 1.0])
+    obs_scales = np.array([0.0001, 1.0])
 
     states = sample_states(n_time_steps, initial_state_dist, transition)
     emissions = sample_emisson(states, obs_scales=obs_scales)
